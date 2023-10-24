@@ -5,10 +5,13 @@ import re
 import requests
 import asyncio
 import spotipy
+import logging
 from spotipy.oauth2 import SpotifyOAuth
 from dotenv import load_dotenv, set_key
 
 load_dotenv("./.env")
+
+logging.basicConfig(level=logging.INFO)
 
 # SPOTIFY API https://developer.spotify.com/documentation/web-api
 # SETLIST.FM API https://api.setlist.fm/docs/1.0/index.html
@@ -33,8 +36,8 @@ SETLIST_SONG_IDS = []
 TOUR = {}
 
 ARTIST = {}
-ARTIST_FILE = "setlistArtistDetails.json"
-SETLIST_RAW_FILE = "rawsetlistfmresponse.json"
+ARTIST_FILE = "output/setlistArtistDetails.json"
+SETLIST_RAW_FILE = "output/rawsetlistfmresponse.json"
 
 sp_oauth = SpotifyOAuth(client_id=os.environ['CLIENT_ID'], client_secret=os.environ['CLIENT_SECRET'], redirect_uri="http://localhost:3000/callback", scope="playlist-modify-public user-library-read")
 token_info = sp_oauth.get_access_token(code=None)
@@ -50,12 +53,12 @@ async def getSetlist(setlistLink):
         "x-api-key": os.environ['SETLIST_KEY'],
         "Accept": "application/json"
         }
-    SETLIST_FILE = "setlist.json"
+    SETLIST_FILE = "output/setlist.json"
 
     pattern = r"(\w+).html$"
     setlist_id = re.findall(pattern, setlistLink)[0]
 
-    print(setlist_id)
+    logging.info(setlist_id)
     REQ_LINK = SETLIST_FM_API_LINK + setlist_id
 
     # Get request to setlist.fm API
@@ -82,10 +85,10 @@ async def getSetlist(setlistLink):
                 SETLIST.append([song["name"], responseJson["artist"]["name"], False])
 
         for song in SETLIST:
-            print(song)
+            logging.info(song)
             
     except requests.exceptions.HTTPError as err:
-        print('Error:', err.response.status_code)
+        logging.info('Error:', err.response.status_code)
         sys.exit()
 
 async def getArtistSpotifyDetails(artistName):
@@ -95,10 +98,10 @@ async def getArtistSpotifyDetails(artistName):
     artistID = artistSearchResults["artists"]["items"][0]["id"]
     ARTIST = spotify.artist(artistID)
 
-    print(f"Artist name: {ARTIST['name']}")
-    print(f"Artist genres: {', '.join(ARTIST['genres'])}")
-    print(f"Artist popularity: {ARTIST['popularity']}")
-    print(f"Artist followers: {ARTIST['followers']['total']}")
+    logging.info(f"Artist name: {ARTIST['name']}")
+    logging.info(f"Artist genres: {', '.join(ARTIST['genres'])}")
+    logging.info(f"Artist popularity: {ARTIST['popularity']}")
+    logging.info(f"Artist followers: {ARTIST['followers']['total']}")
 
     with open(ARTIST_FILE, 'w') as outfile:
         json.dump(artistSearchResults, outfile, indent=2)
@@ -108,7 +111,7 @@ async def getTrackIds(setlist):
         try:
             trackData = await getTrack(track[0], track[1], track[2])
             SETLIST_SONG_IDS.append(trackData["id"])
-            print(f"Track {i+1} | ID: {trackData['id']} | Name: {trackData['name']}")
+            logging.info(f"Track {i+1} | ID: {trackData['id']} | Name: {trackData['name']}")
         except:
             continue
 
@@ -126,10 +129,10 @@ async def getTrack(track, artist, isCover):
                 trackSearchResults = spotify.search(q=query, type='track')
                 return trackSearchResults['tracks']['items'][0]
             except:
-                print(f"Could not find {track} by {SETLIST_ARTIST[0]}")
+                logging.info(f"Could not find {track} by {SETLIST_ARTIST[0]}")
                 return None
         else:
-            print(f"Could not find {track} by {artist}")
+            logging.info(f"Could not find {track} by {artist}")
             return None
 
 async def createPlaylist(setlistSongIDs):
@@ -142,13 +145,20 @@ async def createPlaylist(setlistSongIDs):
         playlist_description = f"{SETLIST_ARTIST[0]} Setlist"
 
     # Temporary command line input for playlist creation
-    print("Create playlist - " + playlist_name + " - " + playlist_description + "? (y/n): ")
+    logging.info("Create playlist - " + playlist_name + " - " + playlist_description + "? (y/n): ")
+
+    # Change to cmdInput = input() for testing, cmdInput = "y" for production
     cmdInput = input()
     if cmdInput == "y":  
         playlist = spotify.user_playlist_create(profile["id"], playlist_name, public=True, collaborative=False, description=playlist_description)
         spotify.user_playlist_add_tracks(profile["id"], playlist["id"], setlistSongIDs)
-        print(f"You have added {len(setlistSongIDs)} songs to your playlist {playlist_name}")
+        logging.info(f"You have added {len(setlistSongIDs)} songs to your playlist {playlist_name}")
+        playlist_details = spotify.playlist(playlist_id=playlist["id"])
+        playist_url = playlist_details["external_urls"]["spotify"]
+        print(playist_url)
+
     else:
+        logging.info("Playlist creation cancelled")
         print("Playlist creation cancelled")
 
 if len(sys.argv) > 1:
@@ -157,11 +167,11 @@ if len(sys.argv) > 1:
 validSetlist = re.search(r'https://www.setlist.fm/setlist/.*', SETLIST_LINK)
 
 if not validSetlist:
-    print("Invalid setlist link")
+    logging.info("Invalid setlist link")
     sys.exit()
 else :
     asyncio.run(getSetlist(SETLIST_LINK))
-    print(SETLIST_ARTIST)
+    logging.info(SETLIST_ARTIST)
 ###############
 asyncio.run(getArtistSpotifyDetails(SETLIST_ARTIST[0]))
 
