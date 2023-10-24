@@ -10,22 +10,19 @@ subprocess_raw = 'output/subprocess_raw.json'
 def index():
     if request.method == 'POST':
         url = request.form['url']
+        print(url)
         return render_template('loading.html', url=url)
     else:
-        return '''
-            <form method="post">
-                <label for="url">Enter URL:</label>
-                <input type="text" id="url" name="url">
-                <input type="submit" value="Execute Script">
-            </form>
-        '''
+        return render_template('index.html')
 
 @app.route('/execute', methods=['POST'])
 def execute():
     url = request.form['url']
 
-    output = subprocess.run(['python', 'generate-setlist.py', url], stdout=subprocess.PIPE, universal_newlines=True)
-    return render_template('output.html', output=output.stdout)
+    playlist_link = subprocess.run(['python', 'generate-setlist.py', url], stdout=subprocess.PIPE, universal_newlines=True)
+    embed_code = f'<iframe src="https://open.spotify.com/embed/playlist/{playlist_link.stdout.split(":")[2]}" width="300" height="380" frameborder="0" allowtransparency="true" allow="encrypted-media"></iframe>'
+    #print(embed_code)
+    return render_template('output.html', embed_code=embed_code)
 
 if __name__ == '__main__':
     app.run(debug=True)

@@ -153,9 +153,9 @@ async def createPlaylist(setlistSongIDs):
         playlist = spotify.user_playlist_create(profile["id"], playlist_name, public=True, collaborative=False, description=playlist_description)
         spotify.user_playlist_add_tracks(profile["id"], playlist["id"], setlistSongIDs)
         logging.info(f"You have added {len(setlistSongIDs)} songs to your playlist {playlist_name}")
-        playlist_details = spotify.playlist(playlist_id=playlist["id"])
-        playist_url = playlist_details["external_urls"]["spotify"]
-        print(playist_url)
+        #playlist_details = spotify.playlist(playlist_id=playlist["id"])
+        playist_uri = playlist["uri"]
+        print(playist_uri)
 
     else:
         logging.info("Playlist creation cancelled")
