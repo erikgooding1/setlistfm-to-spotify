@@ -11,6 +11,11 @@
     <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='fontawesome/css/fontawesome.css') }}" />
     <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='fontawesome/css/brands.css') }}" />
     <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='fontawesome/css/solid.css') }}" />
+    <script>
+        setTimeout(function() {
+            $('#warning').fadeOut('fast');
+        }, 5000);
+    </script>
 </head>
 <body>
     <div class="container-fluid text-center">
@@ -22,6 +27,7 @@
                     <input type="text" id="url" name="url" class="form-control" placeholder="Enter a valid setlist.fm URL" aria-label="setlist.fm url" aria-describedby="submit-button">
                     <button class="btn btn-outline-secondary" type="submit" id="submit-button">Submit</button>
                 </form>
+                {{ warning|safe }}
             </div>
         </div>
     </div>
