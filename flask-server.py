@@ -9,13 +9,13 @@ def index():
     if request.method == 'POST':
         url = request.form['url']
         if request.form.get('tapes') == 'on':
-            tapes = 'True'
+            tapes = 'true'
         else:
-            tapes = 'False'
+            tapes = 'false'
         if request.form.get('medleys') == 'on':
-            medleys = 'True'
+            medleys = 'true'
         else:
-            medleys = 'False'
+            medleys = 'false'
 
         return render_template('loading.html', url=url, tapes=tapes, medleys=medleys)
     else:
@@ -26,7 +26,7 @@ def execute():
     url = request.form.get('url')
     tapes = request.form.get('tapes')
     medleys = request.form.get('medleys')
-    
+
     output = subprocess.run(['python', 'generate-setlist.py', url, tapes, medleys], stdout=subprocess.PIPE, universal_newlines=True)
     output_as_string = output.stdout
     lines = output_as_string.split('\n')

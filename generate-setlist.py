@@ -80,13 +80,21 @@ async def getSetlist(setlistLink):
             TOUR["name"] = responseJson["tour"]["name"]
 
         for song in responseJson["sets"]["set"][0]["song"]:
-            if "cover" in song:
-                SETLIST.append([song["name"], song['cover']['name'], True])
-            else:
-                SETLIST.append([song["name"], responseJson["artist"]["name"], False])
+            try: 
+                SETLIST.append([song["name"], song['cover']['name'], True, 'tape' in song])
+            except KeyError:
+                SETLIST.append([song["name"], responseJson["artist"]["name"], False, 'tape' in song])
 
-        for song in SETLIST:
-            logging.info(song)
+        try:
+            if responseJson["sets"]["set"][1]:
+                for song in responseJson["sets"]["set"][1]["song"]:
+                    try: 
+                        SETLIST.append([song["name"], song['cover']['name'], True, 'tape' in song])
+                    except KeyError:
+                        SETLIST.append([song["name"], responseJson["artist"]["name"], False, 'tape' in song])
+        except:
+            logging.info("No encore found")
+        
             
     except requests.exceptions.HTTPError as err:
         logging.info('Error:', err.response.status_code)
@@ -109,11 +117,19 @@ async def getArtistSpotifyDetails(artistName):
         json.dump(artistSearchResults, outfile, indent=2)
 
 async def getTrackIds(setlist):
+    numSongs = 0
     for i, track in enumerate(setlist):
+        logging.info(track)
         try:
-            trackData = await getTrack(track[0], track[1], track[2])
-            SETLIST_SONG_IDS.append(trackData["id"])
-            logging.info(f"Track {i+1} | ID: {trackData['id']} | Name: {trackData['name']}")
+            # If the track is a tape, and tapes are not selected, skip the track
+            if track[3] == True and sys.argv[2] == 'false':
+                logging.info(f"Skipping {track[0]} because it is a tape")
+                continue
+            else:
+                trackData = await getTrack(track[0], track[1], track[2])
+                SETLIST_SONG_IDS.append(trackData["id"])
+                logging.info(f"Track {numSongs+1} | ID: {trackData['id']} | Name: {trackData['name']}")
+                numSongs += 1
         except:
             continue
 
@@ -170,12 +186,12 @@ if len(sys.argv) > 1:
 
 validSetlist = re.search(r'https://www.setlist.fm/setlist/.*', SETLIST_LINK)
 logging.info(sys.argv)
-if sys.argv[2] == 'True':
+if sys.argv[2] == 'true':
     logging.info("Tapes selected")
 else:
     logging.info("No tapes selected")
 
-if sys.argv[3] == 'True':
+if sys.argv[3] == 'true':
     logging.info("Medleys selected")
 else:
     logging.info("No medleys selected")
