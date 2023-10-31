@@ -49,6 +49,7 @@ profile = spotify.current_user()
 
 async def getSetlist(setlistLink):
 
+
     REQ_HEADERS = {
         "x-api-key": os.environ['SETLIST_KEY'],
         "Accept": "application/json"
@@ -89,6 +90,7 @@ async def getSetlist(setlistLink):
             
     except requests.exceptions.HTTPError as err:
         logging.info('Error:', err.response.status_code)
+        print('Error:', err.response.status_code)
         sys.exit()
 
 async def getArtistSpotifyDetails(artistName):
@@ -155,6 +157,8 @@ async def createPlaylist(setlistSongIDs):
         logging.info(f"You have added {len(setlistSongIDs)} songs to your playlist {playlist_name}")
         #playlist_details = spotify.playlist(playlist_id=playlist["id"])
         playist_uri = playlist["uri"]
+        logging.info("Playlist URI: " + playist_uri)
+        print("Playlist created")
         print(playist_uri)
 
     else:
@@ -165,9 +169,20 @@ if len(sys.argv) > 1:
     SETLIST_LINK = sys.argv[1]
 
 validSetlist = re.search(r'https://www.setlist.fm/setlist/.*', SETLIST_LINK)
+logging.info(sys.argv)
+if sys.argv[2] == 'True':
+    logging.info("Tapes selected")
+else:
+    logging.info("No tapes selected")
+
+if sys.argv[3] == 'True':
+    logging.info("Medleys selected")
+else:
+    logging.info("No medleys selected")
 
 if not validSetlist:
     logging.info("Invalid setlist link")
+    print("Invalid setlist link provided. Example: https://www.setlist.fm/setlist/muse/2023/the-o2-arena-london-england-6ba3d6fe.html")
     sys.exit()
 else :
     asyncio.run(getSetlist(SETLIST_LINK))
@@ -178,6 +193,7 @@ asyncio.run(getArtistSpotifyDetails(SETLIST_ARTIST[0]))
 asyncio.run(getTrackIds(SETLIST))
 
 asyncio.run(createPlaylist(SETLIST_SONG_IDS))
+
 ###############
 
 
