@@ -195,7 +195,7 @@ async def createPlaylist(setlistSongIDs):
         playlist = spotify.user_playlist_create(profile["id"], playlist_name, public=True, collaborative=False, description=playlist_description)
         spotify.user_playlist_add_tracks(profile["id"], playlist["id"], setlistSongIDs)
         
-        artist_immge = await get_as_base_64(ARTIST["images"][0]["url"])
+        artist_image = await get_as_base_64(ARTIST["images"][0]["url"])
         spotify.playlist_upload_cover_image(playlist["id"], artist_image)
 
         logging.info(f"You have added {len(setlistSongIDs)} songs to your playlist {playlist_name}")
