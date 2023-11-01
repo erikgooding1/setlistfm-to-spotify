@@ -6,6 +6,7 @@ import requests
 import asyncio
 import spotipy
 import logging
+import base64
 from spotipy.oauth2 import SpotifyOAuth
 from dotenv import load_dotenv, set_key
 
@@ -39,7 +40,7 @@ ARTIST = {}
 ARTIST_FILE = "output/setlistArtistDetails.json"
 SETLIST_RAW_FILE = "output/rawsetlistfmresponse.json"
 
-sp_oauth = SpotifyOAuth(client_id=os.environ['CLIENT_ID'], client_secret=os.environ['CLIENT_SECRET'], redirect_uri="http://localhost:3000/callback", scope="playlist-modify-public user-library-read")
+sp_oauth = SpotifyOAuth(client_id=os.environ['CLIENT_ID'], client_secret=os.environ['CLIENT_SECRET'], redirect_uri="http://localhost:3000/callback", scope="playlist-modify-public user-library-read user-library-modify ugc-image-upload")
 token_info = sp_oauth.get_access_token(code=None)
 
 spotify = spotipy.Spotify(auth_manager=sp_oauth)
@@ -79,13 +80,36 @@ async def getSetlist(setlistLink):
         if "tour" in responseJson:
             TOUR["name"] = responseJson["tour"]["name"]
 
+        # Pattern to see if a song is a medley (separated by ' / ')
+        medleyPattern = r"\s\/\s"
+
         for song in responseJson["sets"]["set"][0]["song"]:
-            try: 
-                SETLIST.append([song["name"], song['cover']['name'], True, 'tape' in song])
-            except KeyError:
-                SETLIST.append([song["name"], responseJson["artist"]["name"], False, 'tape' in song])
+            # For each song in the setlist.fm setlist, check if it is a medley
+            medleyMatch = re.search(medleyPattern, song['name'])
+            if medleyMatch != None:
+                logging.info("Medley found!")
+
+                # If the medley checkbox isn't selected, omit it from the spotify setlist
+                if sys.argv[3] == 'false':
+                    logging.info("Omitting medley")
+                    continue
+                else:
+                    # If the medley checkbox is selected, add each song in the medley to the spotify setlist
+                    # This assumes that all songs in a medley is by the touring artist, and not a cover
+                    medleySongs = song['name'].split(" / ")
+                    for medleySong in medleySongs:
+                        SETLIST.append([medleySong, responseJson["artist"]["name"], False, 'tape' in song])
+            else:
+                try: 
+                    # if the song is a cover, add the original artists song to the  spotify setlist
+                    SETLIST.append([song["name"], song['cover']['name'], True, 'tape' in song])
+                except KeyError:
+                    # if the song is not a cover, add the song to the spotify setlist
+                    SETLIST.append([song["name"], responseJson["artist"]["name"], False, 'tape' in song])
 
         try:
+            # Encore songs are kept in a different part of the json response from setlist.fm.
+            # If an encore exists, add it to the spotify setlist
             if responseJson["sets"]["set"][1]:
                 for song in responseJson["sets"]["set"][1]["song"]:
                     try: 
@@ -170,6 +194,10 @@ async def createPlaylist(setlistSongIDs):
     if cmdInput == "y":  
         playlist = spotify.user_playlist_create(profile["id"], playlist_name, public=True, collaborative=False, description=playlist_description)
         spotify.user_playlist_add_tracks(profile["id"], playlist["id"], setlistSongIDs)
+        
+        artist_immge = await get_as_base_64(ARTIST["images"][0]["url"])
+        spotify.playlist_upload_cover_image(playlist["id"], artist_image)
+
         logging.info(f"You have added {len(setlistSongIDs)} songs to your playlist {playlist_name}")
         #playlist_details = spotify.playlist(playlist_id=playlist["id"])
         playist_uri = playlist["uri"]
@@ -180,6 +208,10 @@ async def createPlaylist(setlistSongIDs):
     else:
         logging.info("Playlist creation cancelled")
         print("Playlist creation cancelled")
+
+# helper function to encode first artist image as base64
+async def get_as_base_64(url):
+    return base64.b64encode(requests.get(url).content).decode('utf-8')
 
 if len(sys.argv) > 1:
     SETLIST_LINK = sys.argv[1]
