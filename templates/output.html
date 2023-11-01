@@ -8,10 +8,15 @@
       integrity="sha384-T3c6CoIi6uLrA9TneNEoa7RxnatzjcDSCmG1MXxSR1GAsXEV/Dwwykc2MPK8M2HN"
       crossorigin="anonymous"
     />
+    <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='stylesheet.css') }}" />
 </head>
 <body>
-    <h1>Output</h1>
-    {{ embed_code|safe }}
+  <div class="p-5 text-center justify-content-center align-items-center text-light" id="jumbo-noflex">
+      {{ embed_code|safe }}
+      <div class="row mx-auto col-4 my-3">
+        <a class="btn btn-success" href="/" role="button">Back</a>
+      </div>
+  </div>
 </body>
 </html>
 

@@ -9,6 +9,7 @@
       integrity="sha384-T3c6CoIi6uLrA9TneNEoa7RxnatzjcDSCmG1MXxSR1GAsXEV/Dwwykc2MPK8M2HN"
       crossorigin="anonymous"
     />
+    <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='stylesheet.css') }}" />
     <style>
         .wrapper {
             display: flex;
@@ -18,7 +19,7 @@
 
       .loader {
         border: 16px solid #f3f3f3; /* Light grey */
-        border-top: 16px solid #3498db; /* Blue */
+        border-top: 16px solid #81b71a; /* Blue */
         border-radius: 50%;
         width: 120px;
         height: 120px;
@@ -36,23 +37,24 @@
     </style>
   </head>
   <body>
-    <div class="container-fluid text-center">
-      <div class="p-5 mb-4 bg-body-tertiary rounded-3">
+      <div class="p-5 text-center text-light" id="jumbo"">
         <div class="container-fluid py-5">
-          <h1>Loading...</h1>
+          <h1>Generating playlist...</h1>
           <div class="wrapper">
           <div class="loader"></div>
           </div>
         </div>
       </div>
-    </div>
 
     <script>
+      let domWidth = $(document).width();
+      console.log(domWidth);
+
       $(document).ready(function () {
         $.ajax({
           url: "/execute",
           type: "POST",
-          data: { url: "{{ url }}", tapes: "{{ tapes }}", medleys: "{{ medleys }}" },
+          data: { url: "{{ url }}", tapes: "{{ tapes }}", medleys: "{{ medleys }}", domWidth: domWidth },
           success: function (response) {
             $("body").html(response);
           },

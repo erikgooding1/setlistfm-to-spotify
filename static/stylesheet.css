@@ -5,3 +5,9 @@
     background: rgb(39,121,9);
     background: radial-gradient(circle, rgba(39,121,9,1) 0%, rgba(0,36,3,1) 100%, rgba(0,255,119,1) 100%); 
 }
+
+#jumbo-noflex {
+    min-height: 100vh; 
+    background: rgb(39,121,9);
+    background: radial-gradient(circle, rgba(39,121,9,1) 0%, rgba(0,36,3,1) 100%, rgba(0,255,119,1) 100%); 
+}
