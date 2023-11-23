@@ -40,13 +40,21 @@ ARTIST = {}
 ARTIST_FILE = "output/setlistArtistDetails.json"
 SETLIST_RAW_FILE = "output/rawsetlistfmresponse.json"
 
-sp_oauth = SpotifyOAuth(client_id=os.environ['CLIENT_ID'], client_secret=os.environ['CLIENT_SECRET'], redirect_uri="http://localhost:3000/callback", scope="playlist-modify-public user-library-read user-library-modify ugc-image-upload")
-token_info = sp_oauth.get_access_token(code=None)
+username = sys.argv[4]
+access_token = sys.argv[5]
+refresh_token = sys.argv[6]
 
-spotify = spotipy.Spotify(auth_manager=sp_oauth)
 
-library = spotify.current_user_saved_tracks()
-profile = spotify.current_user()
+try:
+    #sp_oauth = SpotifyOAuth(client_id=os.environ['CLIENT_ID'], client_secret=os.environ['CLIENT_SECRET'], redirect_uri="https://spotify-setlist.egood.tech/callback", username=username, refresh_token=refresh_token,  scope="playlist-modify-public user-library-read user-library-modify ugc-image-upload", open_browser=False)
+    #token_info = sp_oauth.get_access_token(code=None)
+
+    spotify = spotipy.Spotify(auth=access_token)
+
+    library = spotify.current_user_saved_tracks()
+    profile = spotify.current_user()
+except:
+    print("Something went wrong with spotify")
 
 async def getSetlist(setlistLink):
 
@@ -186,28 +194,20 @@ async def createPlaylist(setlistSongIDs):
         playlist_name = f'{SETLIST_ARTIST[0]} Setlist - {TOUR["venue"]}, {TOUR["city"]}, {TOUR["country"]} ({TOUR["year"]})'
         playlist_description = f"{SETLIST_ARTIST[0]} Setlist"
 
-    # Temporary command line input for playlist creation
-    logging.info("Create playlist - " + playlist_name + " - " + playlist_description + "? (y/n): ")
 
-    # Change to cmdInput = input() for testing, cmdInput = "y" for production
-    cmdInput = input()
-    if cmdInput == "y":  
-        playlist = spotify.user_playlist_create(profile["id"], playlist_name, public=True, collaborative=False, description=playlist_description)
-        spotify.user_playlist_add_tracks(profile["id"], playlist["id"], setlistSongIDs)
-        
-        artist_image = await get_as_base_64(ARTIST["images"][0]["url"])
-        spotify.playlist_upload_cover_image(playlist["id"], artist_image)
 
-        logging.info(f"You have added {len(setlistSongIDs)} songs to your playlist {playlist_name}")
+    playlist = spotify.user_playlist_create(profile["id"], playlist_name, public=True, collaborative=False, description=playlist_description)
+    spotify.user_playlist_add_tracks(profile["id"], playlist["id"], setlistSongIDs)
+
+    artist_image = await get_as_base_64(ARTIST["images"][0]["url"])
+    spotify.playlist_upload_cover_image(playlist["id"], artist_image)
+
+    logging.info(f"You have added {len(setlistSongIDs)} songs to your playlist {playlist_name}")
         #playlist_details = spotify.playlist(playlist_id=playlist["id"])
-        playist_uri = playlist["uri"]
-        logging.info("Playlist URI: " + playist_uri)
-        print("Playlist created")
-        print(playist_uri)
-
-    else:
-        logging.info("Playlist creation cancelled")
-        print("Playlist creation cancelled")
+    playist_uri = playlist["uri"]
+    logging.info("Playlist URI: " + playist_uri)
+    print("Playlist created")
+    print(playist_uri)
 
 # helper function to encode first artist image as base64
 async def get_as_base_64(url):

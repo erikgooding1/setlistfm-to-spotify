@@ -54,7 +54,7 @@
         $.ajax({
           url: "/execute",
           type: "POST",
-          data: { url: "{{ url }}", tapes: "{{ tapes }}", medleys: "{{ medleys }}", domWidth: domWidth },
+          data: { url: "{{ url }}", tapes: "{{ tapes }}", medleys: "{{ medleys }}", username: "{{ username }}", access_token: "{{ access_token }}", refresh_token: "{{ refresh_token }}", domWidth: domWidth },
           success: function (response) {
             $("body").html(response);
           },
