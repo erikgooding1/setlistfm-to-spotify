@@ -49,7 +49,7 @@ try:
     #sp_oauth = SpotifyOAuth(client_id=os.environ['CLIENT_ID'], client_secret=os.environ['CLIENT_SECRET'], redirect_uri="https://spotify-setlist.egood.tech/callback", username=username, refresh_token=refresh_token,  scope="playlist-modify-public user-library-read user-library-modify ugc-image-upload", open_browser=False)
     #token_info = sp_oauth.get_access_token(code=None)
 
-    spotify = spotipy.Spotify(auth=access_token)
+    spotify = spotipy.Spotify(auth=access_token, requests_timeout=10, retries=10)
 
     library = spotify.current_user_saved_tracks()
     profile = spotify.current_user()

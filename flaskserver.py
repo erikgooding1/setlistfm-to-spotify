@@ -3,11 +3,17 @@ import json
 import os
 import requests
 import spotipy
+import logging
 from spotipy.oauth2 import SpotifyOAuth
 from flask import Flask, request, render_template, session, redirect, url_for
 from dotenv import load_dotenv, set_key
 
 load_dotenv("./.env")
+
+logging.basicConfig(filename='./log/flask.log', level=logging.DEBUG)
+
+
+
 
 app = Flask(__name__)
 app.secret_key = 'xyz'
@@ -23,35 +29,7 @@ sp_oauth = SpotifyOAuth(client_id=CLIENT_ID, client_secret=CLIENT_SECRET, redire
 AUTH_URL = f"https://accounts.spotify.com/authorize?response_type=code&client_id={CLIENT_ID}&redirect_uri={REDIRECT_URI}&scope={' '.join(SCOPE)}"
 TOKEN_URL = "https://accounts.spotify.com/api/token" # The Spotify token URL
 
-
-@app.route('/', methods=['GET', 'POST'])
-def index():
-    #if 'username' in session:
-        #return f"Logged in as {session['username']}"
-    if request.method == 'POST' and 'username' in session:
-        url = request.form['url']
-        if request.form.get('tapes') == 'on':
-            tapes = 'true'
-        else:
-            tapes = 'false'
-        if request.form.get('medleys') == 'on':
-            medleys = 'true'
-        else:
-            medleys = 'false'
-
-        return render_template('loading.html', url=url, tapes=tapes, medleys=medleys, username=session['username'], access_token=session['access_token'], refresh_token=session['refresh_token'])
-    elif request.method == 'POST' and 'username' not in session:
-        auth_session_html=f'<form class="mb-3" action="https://accounts.spotify.com/authorize" method="GET"><input type="hidden" name="client_id" value="{ CLIENT_ID }"><input type="hidden" name="response_type" value="code"><input type="hidden" name="redirect_uri" value="{ REDIRECT_URI }"><input type="hidden" name="scope" value="{ SCOPE_STRING }"><input type="submit" value="Authorize"></form>'
-        return render_template('index.html', auth_html = auth_session_html, client_id = CLIENT_ID, response_type = "code", redirect_uri = REDIRECT_URI, scope = SCOPE_STRING, warning="Please first authorize us to generate a playlist on your Spotify account.")
-    else:
-        if 'username' not in session: 
-            auth_session_html=f'<form class="mb-3" action="https://accounts.spotify.com/authorize" method="GET"><input type="hidden" name="client_id" value="{ CLIENT_ID }"><input type="hidden" name="response_type" value="code"><input type="hidden" name="redirect_uri" value="{ REDIRECT_URI }"><input type="hidden" name="scope" value="{ SCOPE_STRING }"><input type="submit" value="Authorize"></form>'
-            return render_template('index.html', auth_html=auth_session_html, client_id = CLIENT_ID, response_type = "code", redirect_uri = REDIRECT_URI, scope = SCOPE_STRING)
-        else:
-            auth_session_html=f'<p>Logged in as { session["display_name"] }</p>'
-            return render_template('index.html', auth_html=auth_session_html, client_id = CLIENT_ID, response_type = "code", redirect_uri = REDIRECT_URI, scope = SCOPE_STRING)
-
-@app.route('/callback')
+@app.route('/callback', methods=['GET', 'POST'])
 def callback():
     print("callback")
     code = request.args.get("code")
@@ -91,9 +69,36 @@ def callback():
 
     else:
         auth_session_html = f'<form class="mb-3" action="https://accounts.spotify.com/authorize" method="GET"><input type="hidden" name="client_id" value="{{ client_id }}"><input type="hidden" name="response_type" value="code"><input type="hidden" name="redirect_uri" value="{{ redirect_uri }}"><input type="hidden" name="scope" value="{{ scope }}"><input type="submit" value="Authorize"></form>'
-        return render_template("index.html", auth_html=auth_session_html, client_id = CLIENT_ID, response_type = "code", redirect-uri = REDIRECT_URI, scope = SCOPE_STRING)
+        return render_template("index.html", auth_html=auth_session_html, client_id = CLIENT_ID, response_type = "code", redirect_uri = REDIRECT_URI, scope = SCOPE_STRING)
 
-@app.route('/execute', methods=['POST'])
+
+@app.route('/', methods=['GET', 'POST'])
+def index():
+    if request.method == 'POST' and 'username' in session:
+        url = request.form['url']
+        if request.form.get('tapes') == 'on':
+            tapes = 'true'
+        else:
+            tapes = 'false'
+        if request.form.get('medleys') == 'on':
+            medleys = 'true'
+        else:
+            medleys = 'false'
+
+        return render_template('loading.html', url=url, tapes=tapes, medleys=medleys, username=session['username'], access_token=session['access_token'], refresh_token=session['refresh_token'])
+    elif request.method == 'POST' and 'username' not in session:
+        auth_session_html=f'<form class="mb-3" action="https://accounts.spotify.com/authorize" method="GET"><input type="hidden" name="client_id" value="{ CLIENT_ID }"><input type="hidden" name="response_type" value="code"><input type="hidden" name="redirect_uri" value="{ REDIRECT_URI }"><input type="hidden" name="scope" value="{ SCOPE_STRING }"><input type="submit" value="Authorize"></form>'
+        return render_template('index.html', auth_html = auth_session_html, client_id = CLIENT_ID, response_type = "code", redirect_uri = REDIRECT_URI, scope = SCOPE_STRING, warning="Please first authorize us to generate a playlist on your Spotify account.")
+    else:
+        if 'username' not in session: 
+            auth_session_html=f'<form class="mb-3" action="https://accounts.spotify.com/authorize" method="GET"><input type="hidden" name="client_id" value="{ CLIENT_ID }"><input type="hidden" name="response_type" value="code"><input type="hidden" name="redirect_uri" value="{ REDIRECT_URI }"><input type="hidden" name="scope" value="{ SCOPE_STRING }"><input type="submit" value="Authorize"></form>'
+            return render_template('index.html', auth_html=auth_session_html, client_id = CLIENT_ID, response_type = "code", redirect_uri = REDIRECT_URI, scope = SCOPE_STRING)
+        else:
+            auth_session_html=f'<p>Logged in as { session["display_name"] }</p>'
+            return render_template('index.html', auth_html=auth_session_html, client_id = CLIENT_ID, response_type = "code", redirect_uri = REDIRECT_URI, scope = SCOPE_STRING)
+
+
+@app.route('/execute', methods=['GET', 'POST'])
 def execute():
     url = request.form.get('url')
     tapes = request.form.get('tapes')
