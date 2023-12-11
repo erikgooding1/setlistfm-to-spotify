@@ -8,10 +8,9 @@
       integrity="sha384-T3c6CoIi6uLrA9TneNEoa7RxnatzjcDSCmG1MXxSR1GAsXEV/Dwwykc2MPK8M2HN"
       crossorigin="anonymous"
     />
-    <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='fontawesome/css/fontawesome.css') }}" />
-    <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='fontawesome/css/brands.css') }}" />
-    <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='fontawesome/css/solid.css') }}" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
     <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='stylesheet.css') }}" />
+    <script src="https://kit.fontawesome.com/7ccb4f9b88.js" crossorigin="anonymous"></script>
     <script>
         setTimeout(function() {
             $('#warning').fadeOut('fast');
@@ -21,7 +20,7 @@
 <body>
         <div class="p-5 text-center text-light" id="jumbo">
             <div class="container-fluid py-5">
-                <i style="color:#81b71a" class="fa-brands fa-spotify fa-2xl"></i>
+                <i class="sp-green fa-brands fa-spotify fa-2xl"></i>
                 <h1 class="display-5 fw-bold my-4">Setlist.fm to Spotify Playlist Converter</h1>
                 {{ warning|safe }}
                 <form class="mb-3" method="POST" action="/">
